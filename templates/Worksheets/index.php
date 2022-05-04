@@ -12,6 +12,7 @@
             <thead>
                 <tr>
                     <th><?= $this->Paginator->sort('id') ?></th>
+                    <th><?= $this->Paginator->sort('subrank.rank.name')?></th>
                     <th><?= $this->Paginator->sort('subrank_id') ?></th>
                     <th><?= $this->Paginator->sort('link') ?></th>
                     <th><?= $this->Paginator->sort('created') ?></th>
@@ -20,9 +21,10 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($worksheets as $worksheet): ?>
+                <?php foreach ($worksheets as $worksheet) : ?>
                 <tr>
                     <td><?= $this->Number->format($worksheet->id) ?></td>
+                    <td><?= $worksheet->subrank->has('rank') ? $this->Html->link($worksheet->subrank->rank->name, ['controller' => 'Ranks', 'action' => 'view', $worksheet->subrank->rank->id]) : '' ?></td>
                     <td><?= $worksheet->has('subrank') ? $this->Html->link($worksheet->subrank->id, ['controller' => 'Subranks', 'action' => 'view', $worksheet->subrank->id]) : '' ?></td>
                     <td><?= h($worksheet->link) ?></td>
                     <td><?= h($worksheet->created) ?></td>

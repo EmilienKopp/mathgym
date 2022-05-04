@@ -4,6 +4,7 @@
  * @var \App\Model\Entity\Subrank $subrank
  * @var \Cake\Collection\CollectionInterface|string[] $ranks
  */
+debug($ranks);
 ?>
 <div class="row">
     <aside class="column">
@@ -18,6 +19,7 @@
             <fieldset>
                 <legend><?= __('Add Subrank') ?></legend>
                 <?php
+
                     echo $this->Form->control('rank_id', ['options' => $ranks]);
                     echo $this->Form->control('numwithin');
                 ?>

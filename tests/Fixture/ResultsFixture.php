@@ -22,8 +22,8 @@ class ResultsFixture extends TestFixture
                 'student_id' => 1,
                 'worksheet_id' => 1,
                 'result' => 'Lore',
-                'created' => '2022-05-04 00:49:02',
-                'updated' => '2022-05-04 00:49:02',
+                'created' => '2022-05-04 01:40:36',
+                'updated' => '2022-05-04 01:40:36',
             ],
         ];
         parent::init();

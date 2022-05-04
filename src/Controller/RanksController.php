@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Subrank;
+use Cake\Error\Debugger;
+
 /**
  * Ranks Controller
  *
@@ -46,11 +49,31 @@ class RanksController extends AppController
      */
     public function add()
     {
+        $key = $this->calculateRankKey();
         $rank = $this->Ranks->newEmptyEntity();
         if ($this->request->is('post')) {
             $rank = $this->Ranks->patchEntity($rank, $this->request->getData());
+            $rank->id = $key;
+
             if ($this->Ranks->save($rank)) {
                 $this->Flash->success(__('The rank has been saved.'));
+                // Add subranks on the basis that one rank has 5 subranks
+                // MUST BE PROCESSED AFTER ADDING RANK or the associated rank_id will not be present in the Ranks table
+                // The id of the first subrank within a rank is rank_id($key-1) * 5
+                $subranks = $this->getTableLocator()->get('Subranks');
+                for ($i = 0; $i < 5; $i++) {
+                    $subrank = $subranks->newEmptyEntity();
+                    $subrankId = 5 * ($key - 1) + $i;
+                    $subrank = new Subrank([
+                            'id' => $subrankId,
+                            'rank_id' => $key,
+                            'numwithin' => $i + 1,
+                    ]);
+                    if (! $subranks->save($subrank)) {
+                        $this->Flash->error(__('One of the associated subranks could not be saved. Check the Subranks section for more information.'));
+                        break;
+                    }
+                }
 
                 return $this->redirect(['action' => 'index']);
             }
@@ -101,5 +124,23 @@ class RanksController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
+    }
+
+
+    /**
+     * CalculateRankKey method / Used mainly in ADD
+     * Used to calculate the primary key (ID) of the rank based on the 'base' number.
+     * Since ranks are groups of 5 subranks and 50 worksheets, and the 'base' is
+     * the number of the first worksheet in each rank,
+     * the ID is ( (base-1) / 50 ) + 1
+     * i.e. The rank of id 2 starts with worksheet #51 (base propery = 51)
+     * i.e. The rank of base #201 should be of id 5 
+     *
+     * @return integer (the id of a rank that has a $base base number) or 0 if the request isn't post or update
+     */
+    public function calculateRankKey ()
+    {
+
+        return $this->request->is(['post', 'patch', 'put']) ? (($this->request->getData('base') -1) / 50) + 1 : 0;
     }
 }

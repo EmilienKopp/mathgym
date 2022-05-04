@@ -92,6 +92,54 @@ class ResultsController extends AppController
             }
             $this->Flash->error(__('The result could not be saved. Please, try again.'));
         }
+        $students = $this->Results->Students->find('list', ['limit' => 200]);
+        $worksheets = $this->Results->Worksheets->find('list', ['limit' => 200]);
+        $this->set(compact('result', 'students', 'worksheets'));
+    }
+
+    public function addBulk($studentId = null)
+    {
+        // Fetch the student
+        $student = $this->Results->Students->get($studentId, ['contain' => 'Ranks']);
+        
+        // Fetch all worksheets for the Student's Rank
+
+        // a- fetch all subranks for the rank
+        $subranks = $this->Results->getTableLocator()->get('Subranks')->find()
+                         ->select('id')
+                         ->where(['rank_id IS' => $student->rank_id]);
+
+        // b- fetch all worksheets for each subrank
+        foreach($subranks as $subrank) {
+
+            // Find all worksheets for given subrank
+            $worksheets = $this->Worksheets->find()
+                      ->select('id')
+                      ->where(['subrank_id IS' => $subrank->id]);
+
+            foreach ($worksheets as $worksheet) {
+
+                // Create a new Result entity with the Worksheet's ID and the Student's ID
+                $result = $this->Results->newEmptyEntity();
+                $result->student_id = $studentId;
+                $result->worksheet_id = $worksheet->id;
+                $result->result = "□";
+            }
+        }
+        
+
+
+
+        $result = $this->Results->newEmptyEntity();
+        if ($this->request->is('post')) {
+            $result = $this->Results->patchEntity($result, $this->request->getData());
+            if ($this->Results->save($result)) {
+                $this->Flash->success(__('The result has been saved.'));
+
+                return $this->redirect(['action' => 'index']);
+            }
+            $this->Flash->error(__('The result could not be saved. Please, try again.'));
+        }
         $students = $this->Results->Students->find('list', ['limit' => 200])->all();
         $worksheets = $this->Results->Worksheets->find('list', ['limit' => 200])->all();
         $this->set(compact('result', 'students', 'worksheets'));

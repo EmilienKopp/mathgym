@@ -19,7 +19,7 @@ class WorksheetsController extends AppController
     public function index()
     {
         $this->paginate = [
-            'contain' => ['Subranks'],
+            'contain' => ['Subranks.Ranks'],
         ];
         $worksheets = $this->paginate($this->Worksheets);
 
@@ -36,10 +36,10 @@ class WorksheetsController extends AppController
     public function view($id = null)
     {
         $worksheet = $this->Worksheets->get($id, [
-            'contain' => ['Subranks', 'Results'],
+            'contain' => ['Subranks.Ranks', 'Results'],
         ]);
 
-        $this->set(compact('worksheet'));
+        $this->set(compact('worksheet', 'subranks'));
     }
 
     /**
@@ -61,6 +61,47 @@ class WorksheetsController extends AppController
         }
         $subranks = $this->Worksheets->Subranks->find('list', ['limit' => 200])->all();
         $this->set(compact('worksheet', 'subranks'));
+    }
+
+    /**
+     * addBulk method
+     *
+     * Adds 10 (TODO: don't hard code but set this in config) worksheets to every Subrank in given Rank
+     **/
+    public function seed()
+    {
+        $rankId = $this->request->getData('rank_id');
+        $success = true;
+        $fails = 0;
+
+        if ($this->request->is('post')) {
+            //fetch all subranks for given rank
+            $subranks = $this->Worksheets->Subranks->find()
+                        ->select('id')
+                        ->where(['rank_id IS' => $rankId])->all();
+            $addedCount = 0;
+            foreach ($subranks as $subrank) {
+                for ($i = 1; $i <= 10; $i++) {
+                    ++$addedCount;
+                    $worksheet = $this->Worksheets->newEmptyEntity();
+                    $worksheetBuiltID = $subrank->id * 10 + $i;
+                    $worksheet->id = $worksheetBuiltID;
+                    $worksheet->subrank_id = $subrank->id;
+                    $success = $this->Worksheets->save($worksheet);
+                    $fails = $success ? $fails : $fails + 1;
+                }
+            }
+            if ($success) {
+                $this->Flash->success(__('{0} worksheet(s) have been saved.', $addedCount - $fails));
+
+                return $this->redirect(['action' => 'index']);
+            } else {
+                $this->Flash->error(__('{0} worksheets could not be saved. Please, try again.', $fails));
+            }
+        }
+        $subranks = $this->Worksheets->Subranks->find('list', ['limit' => 200])->all();
+        $ranks = $this->Worksheets->Subranks->Ranks->find('list')->all();
+        $this->set(compact('worksheet', 'subranks', 'ranks'));
     }
 
     /**

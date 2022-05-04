@@ -5,6 +5,9 @@
  * @var \Cake\Collection\CollectionInterface|string[] $students
  * @var \Cake\Collection\CollectionInterface|string[] $worksheets
  */
+debug($worksheets);
+debug($result);
+debug($students);
 ?>
 <div class="row">
     <aside class="column">
@@ -19,6 +22,8 @@
             <fieldset>
                 <legend><?= __('Add Result') ?></legend>
                 <?php
+                    echo $this->Form->control('student_id', ['options' => $students]);
+                    echo $this->Form->control('worksheet_id', ['options' => $worksheets]);
                     echo $this->Form->control('result');
                 ?>
             </fieldset>
