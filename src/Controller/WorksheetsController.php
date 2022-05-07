@@ -101,7 +101,7 @@ class WorksheetsController extends AppController
         }
         $subranks = $this->Worksheets->Subranks->find('list', ['limit' => 200])->all();
         $ranks = $this->Worksheets->Subranks->Ranks->find('list')->all();
-        $this->set(compact('worksheet', 'subranks', 'ranks'));
+        $this->set(compact('subranks', 'ranks'));
     }
 
     /**

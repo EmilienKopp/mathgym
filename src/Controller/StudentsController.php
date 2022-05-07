@@ -109,4 +109,16 @@ class StudentsController extends AppController
 
         return $this->redirect(['action' => 'index']);
     }
+
+    public function rankUp($studentId)
+    {
+        $student = $this->Students->get($studentId, [
+            'contain' => ['Results'],
+        ]);
+        $student->rank_id += 1;
+
+        // Calls empty results creation method
+        $student->Results->addBulk($studentId);
+
+    }
 }

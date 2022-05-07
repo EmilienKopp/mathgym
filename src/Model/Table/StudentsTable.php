@@ -127,4 +127,24 @@ class StudentsTable extends Table
 
         return $rules;
     }
+
+    /**
+     * Custom Finder method to find student by name or id
+     *
+     * @param string $search The search string (student id or name)
+     * @return \App\Model\Entity\Student The student found by the search
+     */
+    public function findByNameOrId($search)
+    {
+        $student = $this->newEmptyEntity();
+        $studentQuery = $this->find('all')
+                ->where([
+                    'OR' => ['students.name' => $search, 'student_number' => $search ],
+                ])
+                ->contain(['Ranks']);
+
+        $student = $studentQuery->first();
+
+        return $student;
+    }
 }

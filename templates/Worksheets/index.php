@@ -7,7 +7,7 @@
 <div class="worksheets index content">
     <?= $this->Html->link(__('New Worksheet'), ['action' => 'add'], ['class' => 'button float-right']) ?>
     <h3><?= __('Worksheets') ?></h3>
-    <div class="table-responsive">
+    <div class="table table-striped table-hover">
         <table>
             <thead>
                 <tr>
