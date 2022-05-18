@@ -58,8 +58,8 @@ class RanksController extends AppController
             $rankId = $this->getRankIdFromRequest();
             $rank = $this->Ranks->patchEntity($rank, $this->request->getData());
             $rank->id = $rankId;
-            debug($rank);die();
-            if ($this->Ranks->save($rank)) {
+            debug($rank->id);
+            if (true){//$this->Ranks->save($rank)) {
 
                 // Add subranks and worksheets
                 // MUST BE PROCESSED AFTER ADDING RANK or the associated rank_id will not be present in the Ranks table

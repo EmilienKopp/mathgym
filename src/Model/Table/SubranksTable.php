@@ -107,9 +107,9 @@ class SubranksTable extends Table
           return true;
         }
         $numberOfSubranks = (int)($max+1 - $base)/10;
-
+        debug($numberOfSubranks); die();
         for ($i = 0; $i < $numberOfSubranks; $i++) {
-            $subrankId = (int)($numberOfSubranks * ($rankId - 1) + $i);
+            $subrankId = (int)(10 * ($rankId - 1) + $i);
             $subrank = new Subrank([
                     'id' => $subrankId,
                     'rank_id' => $rankId,
