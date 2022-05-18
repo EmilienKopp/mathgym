@@ -107,6 +107,7 @@ class SubranksTable extends Table
           return true;
         }
         $numberOfSubranks = (int)($max+1 - $base)/10;
+        $previousSubrank = $this->select(['previous_rank' => $query->func()->max('subranks.id')]);
         debug($numberOfSubranks); die();
         for ($i = 0; $i < $numberOfSubranks; $i++) {
             $subrankId = (int)(10 * ($rankId - 1) + $i);
