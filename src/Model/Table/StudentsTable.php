@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use Cake\Datasource\EntityInterface;
 use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -82,7 +83,7 @@ class StudentsTable extends Table
 
         $validator
             ->integer('rank_id')
-            ->allowEmptyString('rank_id');
+            ->requirePresence('rank_id','create');
 
         $validator
             ->integer('worksheets_count')
@@ -146,5 +147,35 @@ class StudentsTable extends Table
         $student = $studentQuery->first();
 
         return $student;
+    }
+
+    public function updateStats($studentId) {
+        $student = $this->get($studentId);
+
+        //Get and assign the non-empty results (　◎ / △ )
+        $query = $this->find();
+        $query->select(['total_worksheets' => $query->func()->count('Results.result')])
+            ->where(['student_id IS ' => $studentId])
+            ->where(['Results.result <> ' => '□'])
+            ->leftJoinWith('Results')
+            ->group(['Students.id'])
+            ->enableAutoFields(true);
+        $student->worksheets_count = $query->first()->total_worksheets;
+
+
+        //Get and assign the success results ( ◎ )
+        $query = $this->find();
+        $query->select(['total_success' => $query->func()->count('Results.result')])
+            ->where(['student_id IS ' => $studentId])
+            ->where(['Results.result IS ' => '◎'])
+            ->leftJoinWith('Results')
+            ->group(['Students.id'])
+            ->enableAutoFields(true);
+        $student->perfects_count = $query->first()->total_success;
+
+        //Compute the accuracy rate
+        $student->accuracy_rate = round(100 * $student->perfects_count / $student->worksheets_count,2);
+
+        return $this->save($student);
     }
 }

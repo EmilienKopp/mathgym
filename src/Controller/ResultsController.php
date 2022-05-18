@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Tools\VerboseReturn;
+
 /**
  * Results Controller
  *
@@ -40,7 +42,7 @@ class ResultsController extends AppController
         *]);
         **/
         $students = $this->getTableLocator()->get('Students');
-        $search = $this->request->getQuery('search');     
+        $search = $this->request->getQuery('search');
         if ($this->request->is('get') && $search != null) {
             $studentQuery = $students->find('all')
                 ->where([
@@ -85,12 +87,12 @@ class ResultsController extends AppController
             $student = $students->findByNameOrId($search);
             $studentId = $student->id;
         } else {
-            $student = $students->get($studentId);
+            $student = $students->get($studentId, ['contain' => 'Ranks']);
         }
 
         $studentRankQuery = $students->find()
             ->where(['students.id IS' => $studentId])
-            ->contain('Ranks');    
+            ->contain('Ranks');
         $currentRank = $studentRankQuery->first()->rank;
         $nextRank = $ranks->get($currentRank->id + 1);
 
@@ -105,7 +107,6 @@ class ResultsController extends AppController
                         ])
                         ->where(['Subranks.rank_id IS' => $nextRank->id]);
         $subranksWithResults = $subranksQuery->all();
-
         $this->set(compact('subranksWithResults', 'student', 'currentRank', 'nextRank'));
     }
 
@@ -139,7 +140,7 @@ class ResultsController extends AppController
      * @param int|null $rankId Ranks.Id
      * @return \Cake\Http\Response|null|void Redirects to index with appropriate info message.
      */
-    public function addBulk($studentId = null, $rankId = 1)
+    public function addBulk($studentId, $rankId)
     {
         $insertCount = 0;
         //fetch all subranks and associated worksheets for given Rank
@@ -209,7 +210,8 @@ class ResultsController extends AppController
             $result->result = $map[$resultValue];
             $successCount += $this->Results->save($result) ? 1 : 0;
         }
-
+        $studentsTable = $this->getTableLocator()->get('Students');
+        $studentsTable->updateStats($studentId);
         $this->Flash->info(__('{0} result(s) have been updated. {1} result(s) have failed to be updated.', $successCount, count($data) - $successCount ));
 
         return $this->redirect([
@@ -268,8 +270,52 @@ class ResultsController extends AppController
         return $this->redirect(['action' => 'index']);
     }
 
+    public function rankUp($studentId)
+    {
+        $studentsTable = $this->getTableLocator()->get('Students');
+        $student = $studentsTable->get($studentId, ['contain' => ['Ranks']]);
+        $verboseResponse = new VerboseReturn(false);
+
+        // Check if the next rank exists
+        $nextRankId = $student->rank_id + 1;
+        $newRank = $studentsTable->Ranks->get($nextRankId);
+        if ($newRank == null) {
+            $this->Flash
+                ->error(__('There is no rank created after {0}. Please create that rank first.', $student->rank->name));
+
+            return $this->redirect(['controller' => 'Ranks', 'action' => 'index']);
+        }
+
+        // Update the student's rank_id column
+        $student->rank_id = $nextRankId;
+        // Attempts saving
+        if ($studentsTable->save($student)) {
+
+            // Create the new blank results for the student's new rank if the student was updated correctly
+            // Create the worksheets for the rank ABOVE the new rank of the student, so for $nextRankId + 1 (rank_id + 1)
+            $verboseResponse = $this->Results->createManyForStudentAndRank($student->id, $student->rank_id + 1);
+            if ($verboseResponse->isSuccess) {
+                // Record the new rank in the History table
+                $historiesTable = $this->getTableLocator()->get('Histories');
+                $historiesTable->recordRankUp($studentId);
+                $this->Flash->success('Congratulations on ranking up!');
+            } else {
+                $this->Flash->info(__('The rank was updated but {0} results out of {1} were not created. Update the results manually.',
+                    $verboseResponse->expectedCount - $verboseResponse->actualCount,
+                    $verboseResponse->expectedCount
+                ));
+            }
+        } else {
+            $this->Flash->error(__('Something went wrong.'));
+        }
+
+        return $this->redirect(['controller' => 'Results', 'action' => 'view', $studentId ]);
+    }
+
     public function createEmptyForStudent($studentId = null, $rankId = null)
     {
 
     }
+
+
 }

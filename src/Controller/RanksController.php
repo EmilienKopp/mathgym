@@ -49,37 +49,39 @@ class RanksController extends AppController
      */
     public function add()
     {
-        $key = $this->calculateRankKey();
+        $rankId = $this->getRankIdFromRequest();
         $rank = $this->Ranks->newEmptyEntity();
+        if ($this->request->is(['get'])) {
+            $ranks = $this->Ranks->find()->all();
+        }
         if ($this->request->is('post')) {
             $rank = $this->Ranks->patchEntity($rank, $this->request->getData());
-            $rank->id = $key;
+            $rank->id = $rankId;
 
             if ($this->Ranks->save($rank)) {
-                $this->Flash->success(__('The rank has been saved.'));
-                // Add subranks on the basis that one rank has 5 subranks
+                // Add subranks and worksheets
                 // MUST BE PROCESSED AFTER ADDING RANK or the associated rank_id will not be present in the Ranks table
-                // The id of the first subrank within a rank is rank_id($key-1) * 5
                 $subranks = $this->getTableLocator()->get('Subranks');
-                for ($i = 0; $i < 5; $i++) {
-                    $subrank = $subranks->newEmptyEntity();
-                    $subrankId = 5 * ($key - 1) + $i;
-                    $subrank = new Subrank([
-                            'id' => $subrankId,
-                            'rank_id' => $key,
-                            'numwithin' => $i + 1,
-                    ]);
-                    if (! $subranks->save($subrank)) {
-                        $this->Flash->error(__('One of the associated subranks could not be saved. Check the Subranks section for more information.'));
-                        break;
+                $worksheets = $this->getTableLocator()->get('Worksheets');
+                if ($subranks->populateRankSubranks($rankId)) {
+                    $newSubranks = $subranks->find()
+                                    ->where(['rank_id IS' => $rankId]);
+                    foreach ($newSubranks as $newSubrank) {
+                        if (! $worksheets->populateSubrankWorksheets($newSubrank->id)) {
+                            $this->Flash->error(__('One or more worksheets could not be created.'));
+                        }
                     }
+                    $this->Flash->success(__('The rank {0} and all its subranks have been successfully created', $rank->name));
+                } else {
+                    $this->Flash->error(__('One of the associated subranks or worksheets could not be saved. Check those sections for more information.'));
                 }
 
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('The rank could not be saved. Please, try again.'));
         }
-        $this->set(compact('rank'));
+
+        $this->set(compact('rank', 'ranks'));
     }
 
     /**
@@ -128,7 +130,7 @@ class RanksController extends AppController
 
 
     /**
-     * CalculateRankKey method / Used mainly in ADD
+     * getRankIdFromRequest method / Used mainly in ADD
      * Used to calculate the primary key (ID) of the rank based on the 'base' number.
      * Since ranks are groups of 5 subranks and 50 worksheets, and the 'base' is
      * the number of the first worksheet in each rank,
@@ -138,9 +140,10 @@ class RanksController extends AppController
      *
      * @return integer (the id of a rank that has a $base base number) or 0 if the request isn't post or update
      */
-    public function calculateRankKey ()
+    public function getRankIdFromRequest ()
     {
+        $base = $this->request->getData('base');
 
-        return $this->request->is(['post', 'patch', 'put']) ? (($this->request->getData('base') -1) / 50) + 1 : 0;
+        return $this->request->is(['post', 'patch', 'put']) ? $this->Ranks->calculatePrimaryKeyFromBase($base) : 0;
     }
 }

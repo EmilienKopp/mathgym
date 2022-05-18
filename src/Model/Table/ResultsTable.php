@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use App\Tools\VerboseReturn;
 
 /**
  * Results Model
@@ -87,5 +88,36 @@ class ResultsTable extends Table
         $rules->add($rules->existsIn('worksheet_id', 'Worksheets'), ['errorField' => 'worksheet_id']);
 
         return $rules;
+    }
+
+    /**
+     * Creates blank results associated to the given student and rank
+     *
+     * @param int $studentId The ID of the student for whom to create results
+     * @param int $rankId The ID of the rank at which the results are created
+     * @return bool | true on success, false if one or more insert(s) fail
+     */
+    public function createManyForStudentAndRank($studentId, $rankId)
+    {
+        $isSuccess = true;
+        $insertCount = 0;
+        //fetch all subranks and associated worksheets for given Rank
+        $worksheetsQuery = $this->Worksheets->find()
+                            ->contain(['Subranks', 'Subranks.Ranks'])
+                            ->where(['Ranks.id IS' => $rankId]);
+
+        $worksheets = $worksheetsQuery->all();
+
+        // b- fetch all worksheets for each subrank
+        foreach ($worksheets as $worksheet) {
+            $result = $this->newEmptyEntity();
+            $result->student_id = $studentId;
+            $result->worksheet_id = $worksheet->id;
+            $result->result = '□';
+            $isSuccess = $isSuccess && $this->save($result);
+            $insertCount += 1;
+        }
+
+        return new VerboseReturn($isSuccess, $worksheets->count(), $insertCount);
     }
 }

@@ -7,6 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use App\Model\Entity\Subrank;
 
 /**
  * Subranks Model
@@ -90,5 +91,29 @@ class SubranksTable extends Table
         $rules->add($rules->existsIn('rank_id', 'Ranks'), ['errorField' => 'rank_id']);
 
         return $rules;
+    }
+
+    /**
+     * Populate method : creates [five] (TODO: make configurable) subranks in the given rank.
+     * Called in Ranks/add method
+     *
+     * @param string|null $id Rank id.
+     * @return bool False if even one insert fails
+     */
+    function populateRankSubranks($rankId)
+    {
+        $isSuccess = true;
+
+        for ($i = 0; $i < 5; $i++) {
+            $subrankId = 5 * ($rankId - 1) + $i;
+            $subrank = new Subrank([
+                    'id' => $subrankId,
+                    'rank_id' => $rankId,
+                    'numwithin' => $i + 1,
+            ]);
+            $isSuccess = $isSuccess && $this->save($subrank);
+        }
+
+        return $isSuccess;
     }
 }

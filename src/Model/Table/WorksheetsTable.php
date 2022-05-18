@@ -91,4 +91,35 @@ class WorksheetsTable extends Table
 
         return $rules;
     }
+
+    /**
+     * Populates a given subrank with all its worksheets
+     * Called by the Ranks/add method
+     *
+     * @param int $rankId  The id of the subrank to be populated.
+     * @return \Cake\ORM\RulesChecker
+     */
+    public function populateSubrankWorksheets($subrankId)
+    {
+        $isSuccess = true;
+        $fails = 0;
+
+        //fetch all subranks for given rank
+
+        $subrank = $this->Subranks->get($subrankId);
+        if ($subrank == null) {
+            return false;
+        }
+
+        // Populate the subrank
+        for ($i = 1; $i <= 10; $i++) {
+            $worksheet = $this->newEmptyEntity();
+            $worksheetBuiltID = $subrank->id * 10 + $i;
+            $worksheet->id = $worksheetBuiltID;
+            $worksheet->subrank_id = $subrank->id;
+            $isSuccess = $isSuccess && $this->save($worksheet);
+        }
+
+        return $isSuccess;
+    }
 }

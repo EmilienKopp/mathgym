@@ -11,36 +11,23 @@
         <table>
             <thead>
                 <tr>
-                    <th><?= $this->Paginator->sort('id') ?></th>
-                    <th><?= $this->Paginator->sort('student_number') ?></th>
                     <th><?= $this->Paginator->sort('name') ?></th>
                     <th><?= $this->Paginator->sort('rank_id') ?></th>
                     <th class="actions"><?= __('Tracker') ?></th>
                     <th><?= $this->Paginator->sort('worksheets_count') ?></th>
                     <th><?= $this->Paginator->sort('perfects_count') ?></th>
                     <th><?= $this->Paginator->sort('accuracy_rate') ?></th>
-                    <th><?= $this->Paginator->sort('grade_id') ?></th>
-                    <th class="actions"><?= __('Actions') ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($students as $student): ?>
                 <tr>
-                    <td><?= $this->Number->format($student->id) ?></td>
-                    <td><?= h($student->student_number) ?></td>
-                    <td><?= h($student->name) ?></td>
+                    <td><?= $this->Html->link(__($student->name), ['action' => 'view', $student->id]) ?></td>
                     <td><?= $student->has('rank') ? $this->Html->link($student->rank->name, ['controller' => 'Ranks', 'action' => 'view', $student->rank->id]) : '' ?></td>
                     <td><?= $this->Html->link(__('See Results'),['controller' => 'results', 'action' => 'view', $student->id], ['class' => 'button']) ?></td>
                     <td><?= $student->worksheets_count === null ? '' : $this->Number->format($student->worksheets_count) ?></td>
                     <td><?= $student->perfects_count === null ? '' : $this->Number->format($student->perfects_count) ?></td>
-                    <td><?= $student->accuracy_rate === null ? '' : $this->Number->format($student->accuracy_rate) ?></td>
-
-                    <td><?= $student->has('grade') ? $this->Html->link($student->grade->name, ['controller' => 'Grades', 'action' => 'view', $student->grade->id]) : '' ?></td>
-                    <td class="actions">
-                        <?= $this->Html->link(__('View'), ['action' => 'view', $student->id]) ?>
-                        <?= $this->Html->link(__('Edit'), ['action' => 'edit', $student->id]) ?>
-                        <?= $this->Form->postLink(__('Delete'), ['action' => 'delete', $student->id], ['confirm' => __('Are you sure you want to delete # {0}?', $student->id)]) ?>
-                    </td>
+                    <td><?= $student->accuracy_rate === null ? '' : $student->accuracy_rate ?> %</td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>

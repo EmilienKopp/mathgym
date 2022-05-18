@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Tools\VerboseReturn;
+use App\Model\Table\ResultsTable;
+
 /**
  * Students Controller
  *
@@ -22,6 +25,8 @@ class StudentsController extends AppController
             'contain' => ['Ranks', 'Grades'],
         ];
         $students = $this->paginate($this->Students);
+
+        
 
         $this->set(compact('students'));
     }
@@ -54,6 +59,16 @@ class StudentsController extends AppController
             $student = $this->Students->patchEntity($student, $this->request->getData());
             if ($this->Students->save($student)) {
                 $this->Flash->success(__('The student has been saved.'));
+
+                $insertResult = $this->getTableLocator()->get('Results')
+                                ->createManyForStudentAndRank($student->id, $student->rank_id+1);
+                if($insertResult->isSuccess) {
+                    $this->Flash->info(__('{0} results were created for student {1} at rank {2}.',
+                                            $insertResult->actualCount,
+                                            $student->name,
+                                            $student->rank_id
+                                        ));
+                }
 
                 return $this->redirect(['action' => 'index']);
             }
@@ -108,17 +123,5 @@ class StudentsController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
-    }
-
-    public function rankUp($studentId)
-    {
-        $student = $this->Students->get($studentId, [
-            'contain' => ['Results'],
-        ]);
-        $student->rank_id += 1;
-
-        // Calls empty results creation method
-        $student->Results->addBulk($studentId);
-
     }
 }

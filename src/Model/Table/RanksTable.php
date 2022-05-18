@@ -73,4 +73,9 @@ class RanksTable extends Table
 
         return $validator;
     }
+
+    public function calculatePrimaryKeyFromBase ($base)
+    {
+        return 1 + ( ($base - 1) / 50 );
+    }
 }
