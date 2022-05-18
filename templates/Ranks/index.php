@@ -14,6 +14,7 @@
                     <th><?= $this->Paginator->sort('id') ?></th>
                     <th><?= $this->Paginator->sort('name') ?></th>
                     <th><?= $this->Paginator->sort('base') ?></th>
+                    <th><?= $this->Paginator->sort('max') ?></th>
                     <th class="actions"><?= __('Actions') ?></th>
                 </tr>
             </thead>
@@ -23,6 +24,7 @@
                     <td><?= $this->Number->format($rank->id) ?></td>
                     <td><?= h($rank->name) ?></td>
                     <td><?= $this->Number->format($rank->base) ?></td>
+                    <td><?= $this->Number->format($rank->max) ?></td>
                     <td class="actions">
                         <?= $this->Html->link(__('View'), ['action' => 'view', $rank->id]) ?>
                         <?= $this->Html->link(__('Edit'), ['action' => 'edit', $rank->id]) ?>

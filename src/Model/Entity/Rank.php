@@ -11,6 +11,7 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property string $name
  * @property int $base
+ * @property int $max
  *
  * @property \App\Model\Entity\Student[] $students
  * @property \App\Model\Entity\Subrank[] $subranks
@@ -31,5 +32,6 @@ class Rank extends Entity
         'base' => true,
         'students' => true,
         'subranks' => true,
+        'max' => true
     ];
 }

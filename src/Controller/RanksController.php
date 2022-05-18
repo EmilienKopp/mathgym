@@ -49,23 +49,25 @@ class RanksController extends AppController
      */
     public function add()
     {
-        $rankId = $this->getRankIdFromRequest();
         $rank = $this->Ranks->newEmptyEntity();
+
         if ($this->request->is(['get'])) {
             $ranks = $this->Ranks->find()->all();
         }
         if ($this->request->is('post')) {
+            $rankId = $this->getRankIdFromRequest();
             $rank = $this->Ranks->patchEntity($rank, $this->request->getData());
             $rank->id = $rankId;
-
+            debug($rank);die();
             if ($this->Ranks->save($rank)) {
+
                 // Add subranks and worksheets
                 // MUST BE PROCESSED AFTER ADDING RANK or the associated rank_id will not be present in the Ranks table
                 $subranks = $this->getTableLocator()->get('Subranks');
                 $worksheets = $this->getTableLocator()->get('Worksheets');
-                if ($subranks->populateRankSubranks($rankId)) {
+                if ($subranks->populateRankSubranks($rank->id,$rank->base,$rank->max)) {
                     $newSubranks = $subranks->find()
-                                    ->where(['rank_id IS' => $rankId]);
+                                    ->where(['rank_id IS' => $rank->id]);
                     foreach ($newSubranks as $newSubrank) {
                         if (! $worksheets->populateSubrankWorksheets($newSubrank->id)) {
                             $this->Flash->error(__('One or more worksheets could not be created.'));
@@ -90,6 +92,7 @@ class RanksController extends AppController
      * @param string|null $id Rank id.
      * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
      * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
+     * TODO: cascade changes of populateSubranks in case a ranks BASE or MAX are changed
      */
     public function edit($id = null)
     {
@@ -136,13 +139,13 @@ class RanksController extends AppController
      * the number of the first worksheet in each rank,
      * the ID is ( (base-1) / 50 ) + 1
      * i.e. The rank of id 2 starts with worksheet #51 (base propery = 51)
-     * i.e. The rank of base #201 should be of id 5 
+     * i.e. The rank of base #201 should be of id 5
      *
      * @return integer (the id of a rank that has a $base base number) or 0 if the request isn't post or update
      */
     public function getRankIdFromRequest ()
     {
-        $base = $this->request->getData('base');
+        $base = (int)$this->request->getData('base');
 
         return $this->request->is(['post', 'patch', 'put']) ? $this->Ranks->calculatePrimaryKeyFromBase($base) : 0;
     }

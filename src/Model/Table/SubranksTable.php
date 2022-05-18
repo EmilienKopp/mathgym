@@ -100,12 +100,16 @@ class SubranksTable extends Table
      * @param string|null $id Rank id.
      * @return bool False if even one insert fails
      */
-    function populateRankSubranks($rankId)
+    function populateRankSubranks($rankId, $base, $max)
     {
         $isSuccess = true;
+        if ($rankId==0){
+          return true;
+        }
+        $numberOfSubranks = (int)($max+1 - $base)/10;
 
-        for ($i = 0; $i < 5; $i++) {
-            $subrankId = 5 * ($rankId - 1) + $i;
+        for ($i = 0; $i < $numberOfSubranks; $i++) {
+            $subrankId = (int)($numberOfSubranks * ($rankId - 1) + $i);
             $subrank = new Subrank([
                     'id' => $subrankId,
                     'rank_id' => $rankId,

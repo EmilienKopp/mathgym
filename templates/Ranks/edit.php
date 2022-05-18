@@ -24,6 +24,7 @@
                 <?php
                     echo $this->Form->control('name');
                     echo $this->Form->control('base');
+                    echo $this->Form->control('max');
                 ?>
             </fieldset>
             <?= $this->Form->button(__('Submit')) ?>

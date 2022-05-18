@@ -11,7 +11,7 @@
             <?= $this->Html->link(__('List Ranks'), ['action' => 'index'], ['class' => 'side-nav-item']) ?>
         </div>
     </aside>
-        
+
     <div class="column-responsive column-80">
         <div class="ranks form content">
             <?= $this->Form->create($rank) ?>
@@ -20,6 +20,7 @@
                 <?php
                     echo $this->Form->control('name');
                     echo $this->Form->control('base');
+                    echo $this->Form->control('max');
                 ?>
             </fieldset>
             <br/>

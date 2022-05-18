@@ -71,11 +71,18 @@ class RanksTable extends Table
             ->requirePresence('base', 'create')
             ->notEmptyString('base');
 
+        $validator
+            ->integer('max')
+            ->requirePresence('max', 'create')
+            ->notEmptyString('max');
+
         return $validator;
     }
 
     public function calculatePrimaryKeyFromBase ($base)
     {
-        return 1 + ( ($base - 1) / 50 );
+        $previousRank = $this->find()->where(['max IS' => $base-1])->first();
+        $key = $previousRank->id +1;
+        return $key;
     }
 }
