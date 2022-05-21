@@ -50,6 +50,9 @@ class RanksTable extends Table
         $this->hasMany('Subranks', [
             'foreignKey' => 'rank_id',
         ]);
+        $this->hasMany('Histories', [
+          'foreignKey' => 'rank_id',
+        ]);
     }
 
     /**

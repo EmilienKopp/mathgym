@@ -29,6 +29,9 @@
                 <tr>
                     <th><?= __('Rank') ?></th>
                     <td><?= $student->has('rank') ? $this->Html->link($student->rank->name, ['controller' => 'Ranks', 'action' => 'view', $student->rank->id]) : '' ?></td>
+                    <td><?= $this->Form->create($student) ?>
+                    <?= $this->Form->select('rank_id', $histories) ?>
+                    <?= $this->Form->end() ?></td>
                 </tr>
                 <tr>
                     <th><?= __('Email') ?></th>

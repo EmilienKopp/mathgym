@@ -60,6 +60,9 @@ class StudentsTable extends Table
         $this->hasMany('Results', [
             'foreignKey' => 'student_id',
         ]);
+        $this->hasMany('Histories', [
+            'foreignKey' => 'student_id',
+        ]);
     }
 
     /**
@@ -177,5 +180,11 @@ class StudentsTable extends Table
         $student->accuracy_rate = round(100 * $student->perfects_count / $student->worksheets_count,2);
 
         return $this->save($student);
+    }
+
+    public function getHistory()
+    {
+        $query = $this->find()->contain(['Histories']);
+        debug($query);
     }
 }

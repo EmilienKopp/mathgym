@@ -22,12 +22,9 @@ class StudentsController extends AppController
     public function index()
     {
         $this->paginate = [
-            'contain' => ['Ranks', 'Grades'],
+            'contain' => ['Ranks', 'Grades', 'Histories'],
         ];
         $students = $this->paginate($this->Students);
-
-        
-
         $this->set(compact('students'));
     }
 
@@ -41,10 +38,21 @@ class StudentsController extends AppController
     public function view($id = null)
     {
         $student = $this->Students->get($id, [
-            'contain' => ['Ranks', 'Grades', 'Results'],
+            'contain' => ['Ranks', 'Grades', 'Results', 'Histories'],
         ]);
-
-        $this->set(compact('student'));
+        $histories = $this->Students->Ranks->find()
+          ->select(['ranks.id','ranks.name'])
+          ->where(['Histories.student_id IS ' => $id])
+          ->leftJoinWith('Histories')
+          ->all();
+      $options = $histories->map(function ($value, $key) {
+            return [
+                'value' => $value->id,
+                'text' => $value->name,
+            ];
+        });
+        debug($options);
+        $this->set(compact('student','histories','options'));
     }
 
     /**
